@@ -202,6 +202,11 @@ SCHEMAS = {
             "type": "int",
             "required": True,
         },
+        "decompose_complete": {
+            "type": "bool",
+            "required": False,
+            "default": False,
+        },
         "revised": {
             "type": "bool",
             "required": False,

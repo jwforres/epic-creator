@@ -12,9 +12,21 @@ Architecture context: .context/architecture-context/
 
 Read the strategy file. Run these checks in order; first match terminates the flow:
 
-**Check 1 — Below threshold**: If the strategy is S-sized AND affects a single component AND a single team AND ≥67% of scope would score High AI implementability: produce a single epic file `artifacts/epic-tasks/{ID}-E001.md` (with full frontmatter and body per Step 8) and a decomposition summary with `epic_count: 1`, `critical_path_length: 1`, `triage: below-threshold`, and `triage_rationale` explaining why. Then stop — no DAG, no multi-step decomposition.
+**Check 1 — Below threshold**: If the strategy is S-sized AND affects a single component AND a single team AND ≥67% of scope would score High AI implementability: produce a single epic file `artifacts/epic-tasks/{ID}-E001.md` (with full frontmatter and body per Step 8) and a decomposition summary. Then stop — no DAG, no multi-step decomposition.
 
-**Check 2 — Documentation only**: If all affected components have "No code changes" or "reference only": produce a single epic file with `implementation_type: docs-authoring`, content outline, and mandatory accuracy validation against architecture context. Write the decomposition summary with `epic_count: 1`, `critical_path_length: 1`, `triage: docs-only`. Then stop.
+**Check 2 — Documentation only**: If all affected components have "No code changes" or "reference only": produce a single epic file with `implementation_type: docs-authoring`, content outline, and mandatory accuracy validation against architecture context. Write the decomposition summary. Then stop.
+
+For either triage path, write the epic file per Step 8b, then set summary frontmatter and the completion sentinel:
+
+```bash
+python3 scripts/frontmatter.py set artifacts/epic-tasks/{ID}-decomposition.md \
+    parent_strat="{ID}" epic_count=1 critical_path_length=1 \
+    triage=below-threshold triage_rationale="<reason>"
+
+python3 scripts/frontmatter.py set artifacts/epic-tasks/{ID}-decomposition.md decompose_complete=true
+```
+
+Use `triage=docs-only` for Check 2. The `decompose_complete=true` line must be your **final action** — the pipeline will not launch the review agent until it is set.
 
 If neither check fires, proceed to Step 1.
 
@@ -302,10 +314,18 @@ Do **not** include `ai_implementability` or `ai_implementability_score` — the 
 
 After writing all epic files, run:
 ```
-python3 scripts/frontmatter.py batch-read artifacts/epic-tasks/{ID}-E*.md
+python3 scripts/frontmatter.py batch-read artifacts/epic-tasks/{ID}-*E[0-9][0-9][0-9].md
 ```
 
 Compare the output against the decomposition summary. If any epic file's `dependencies`, `priority`, `type`, or HLR mappings diverged from the plan, fix the epic file to match the summary.
+
+Then, as your **final action** — after every epic file is written and any divergence is fixed — mark the decomposition complete:
+
+```
+python3 scripts/frontmatter.py set artifacts/epic-tasks/{ID}-decomposition.md decompose_complete=true
+```
+
+The pipeline uses this field to detect that you have finished. Until it is set, the review agent is not launched. Do not set it earlier: anything you write or edit after setting it may be reviewed in a partially written state.
 
 ### Conditional decomposition (when applicable)
 

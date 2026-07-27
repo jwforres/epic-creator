@@ -6,7 +6,6 @@ to parse ``NEXT_POLL`` values.
 """
 
 import argparse
-import glob
 import os
 import sys
 import time
@@ -25,11 +24,17 @@ PHASE_CHECKS = {
 }
 
 
-def _count_epic_files(strat_id):
-    """Count epic files on disk for a strategy (includes BRANCH files)."""
-    pattern = f"artifacts/epic-tasks/{strat_id}-*E*.md"
-    return sum(1 for f in glob.glob(pattern)
-               if not f.endswith("-decomposition.md"))
+
+def _decompose_complete(strat_id, data):
+    """Whether the decompose agent has finished writing for this strategy.
+
+    The agent sets ``decompose_complete`` as its final action (Step 8c), so
+    that field is authoritative.  When the field is absent (agent died or
+    older prompt), returns False — the pipeline's --max-wait timeout will
+    report the strategy as stuck rather than silently proceeding with
+    incomplete output.
+    """
+    return bool(data.get("decompose_complete"))
 
 
 def check_id(phase, strat_id):
@@ -47,11 +52,11 @@ def check_id(phase, strat_id):
         epic_count = data.get("epic_count")
         if not epic_count:
             return "pending"
-        # Wait until all epic files are written, not just the summary.
-        # The decompose agent writes the summary first, then individual
-        # epic files sequentially.  Without this check the poller can
-        # advance to REVIEW_DECOMP while files are still being written.
-        if _count_epic_files(strat_id) < epic_count:
+        # Wait until the agent is done writing, not just until the summary
+        # exists.  The summary is written first (Step 8a) and epic files
+        # follow (Step 8b), then Step 8c edits them; advancing early hands
+        # REVIEW_DECOMP a partially written decomposition.
+        if not _decompose_complete(strat_id, data):
             return "pending"
         return "completed"
     if phase == "review_decomp":
