@@ -12,7 +12,7 @@ Architecture context: .context/architecture-context/
 
 Read the strategy file. Run these checks in order; first match terminates the flow:
 
-**Check 1 — Below threshold**: If the strategy is S-sized AND affects a single component AND a single team AND ≥67% of scope would score High AI implementability: produce a single epic file `artifacts/epic-tasks/{ID}-E001.md` (with full frontmatter and body per Step 8) and a decomposition summary. Then stop — no DAG, no multi-step decomposition.
+**Check 1 — Below threshold**: If the strategy is S-sized AND affects a single component AND a single team AND ≥67% of scope would score High AI implementability: produce a single epic file `artifacts/epic-tasks/{ID}-E001.md` (with full frontmatter and body per Step 8) and a decomposition summary. Then stop — no DAG, no multi-step decomposition. Do not proceed to Steps 1-8. In particular, Step 4's priority-split logic does not apply: a below-threshold strategy stays as one epic even if its HLRs span multiple priority levels.
 
 **Check 2 — Documentation only**: If all affected components have "No code changes" or "reference only": produce a single epic file with `implementation_type: docs-authoring`, content outline, and mandatory accuracy validation against architecture context. Write the decomposition summary. Then stop.
 
@@ -84,11 +84,13 @@ Multiple independent unknowns can produce multiple Investigation epics, even for
 
 ## Step 4: Map HLRs to Epics
 
+**Precondition:** This step only runs for strategies that were NOT triaged in Step 0. If Step 0 produced a below-threshold or docs-only result, the strategy is already a single epic — do not apply priority-split logic.
+
 - Each P0/P1/P2 requirement must map to one or more epics
 - Every HLR must be covered — no orphaned requirements
 - Priority inheritance: prerequisite epic inherits the highest priority of all HLRs it transitively enables
 - An epic blocking all P0 work is implicitly P0
-- Priority split: when an epic maps to HLRs at multiple priority levels, check whether the lower-priority HLRs represent distinct, deferrable features (could be cut from a release without affecting the P0 deliverable). If yes, split them into separate epics by priority so each can be planned independently. If the lower-priority HLR is incidental to the P0 work (error handling, doc coverage, config override that falls out of the same implementation), keep it bundled.
+- Priority split: when an epic maps to HLRs at multiple priority levels, check whether the lower-priority HLRs represent distinct, deferrable features. A feature is "distinct and deferrable" only when it could ship as its own epic with independent user value AND does not share data structures, UI surfaces, or API endpoints with the P0 work. If yes, split them into separate epics by priority so each can be planned independently. If the lower-priority HLR is incidental to the P0 work (error handling, doc coverage, config override that falls out of the same implementation) or is tightly coupled to the same implementation surface, keep it bundled — splitting tightly coupled work creates duplication and artificial boundaries.
 - `docs-authoring` priority exception: `docs-authoring` epics are exempt from priority inheritance. They do not push their priority upstream to the implementations they depend on. Instead, derive their priority from the strategy frontmatter `priority` field: Critical→P0, Major→P1, Normal/Minor/Undefined→P2. If the field is missing or empty, default to P2.
 
 ## Step 5: Build Dependency DAG
@@ -97,7 +99,7 @@ Apply these rules to construct edges between epics:
 
 ### Epic Boundary Rules
 1. Different component OR different team → separate epics
-2. Same component + same team + same logical change → single epic
+2. Same component + same team + same logical change → single epic. When splitting within a single component, split along architectural sub-system boundaries (e.g., backend API vs. frontend plugin, Go service vs. React UI) rather than along priority or requirement-list axes. Never split such that two epics must build the same data structure, UI surface, or API endpoint independently.
 
 ### Investigation Edges
 3. Investigation determines scope/existence of downstream work → blocking edge to all affected Implementations. Every downstream epic gated by an Investigation is a true gate (`remove` if the epic may not exist, `rewrite` if scope/approach changes, `add_remediation` if the investigation may reveal a problem requiring additional work) — record this in Step 8b when writing frontmatter. Bounded outcomes (≤3): conditional branches. Unbounded: phased decomposition.

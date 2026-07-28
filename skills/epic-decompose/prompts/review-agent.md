@@ -25,6 +25,14 @@ python3 scripts/frontmatter.py set artifacts/epic-reviews/{ID}-decomp-review.md 
     error="decomposition summary missing"
 ```
 
+## Step 1.5: Triage Consistency Check
+
+Before scoring criteria, check for a structural contradiction:
+
+If the decomposition summary has `triage: below-threshold` or `triage: docs-only`, then `epic_count` MUST be 1. A triaged strategy that produced multiple epics means the decomposer applied multi-epic logic (e.g., priority splits) after triage should have terminated the flow. This is a **critical** issue — record it under Criterion 3 (Epic Boundaries) and score that criterion 0.
+
+Conversely, if `triage` is absent (full decomposition), do not penalize the decomposition for having multiple epics — multi-epic output is expected.
+
 ## Step 2: Review Against Quality Criteria
 
 Evaluate the decomposition against these 7 criteria. For each, note specific issues found with severity:
@@ -39,7 +47,7 @@ Evaluate the decomposition against these 7 criteria. For each, note specific iss
 - **1**: All P0 HLRs covered but gaps in P1 coverage, or priority inheritance errors (prerequisite epic has lower priority than work it enables).
 - **0**: P0 HLR(s) missing from epic set, or traceability matrix absent.
 
-Check: Read the strategy's HLR list. For each HLR, verify it appears in at least one epic's "HLR Traceability" section. Verify priority inheritance — an epic blocking all P0 work must be P0. Exception: `docs-authoring` epics are exempt from priority inheritance; their priority derives from the strategy's Jira priority (Critical→P0, Major→P1, Normal/Minor/Undefined→P2), not from the implementations they depend on. Do not flag a `docs-authoring` epic's dependency on a lower-priority implementation as a priority inheritance violation. Check for priority collapse — if an epic maps to HLRs at multiple priority levels and the lower-priority HLRs are distinct deferrable features (not incidental polish on the P0 work), they should be in separate epics so they can be planned independently. Priority collapse with deferrable features is always a major issue regardless of component/team boundary constraints — the ability to defer work independently is a planning requirement that overrides boundary convenience.
+Check: Read the strategy's HLR list. For each HLR, verify it appears in at least one epic's "HLR Traceability" section. Verify priority inheritance — an epic blocking all P0 work must be P0. Exception: `docs-authoring` epics are exempt from priority inheritance; their priority derives from the strategy's Jira priority (Critical→P0, Major→P1, Normal/Minor/Undefined→P2), not from the implementations they depend on. Do not flag a `docs-authoring` epic's dependency on a lower-priority implementation as a priority inheritance violation. Check for priority collapse — if an epic maps to HLRs at multiple priority levels and the lower-priority HLRs are distinct deferrable features (not incidental polish on the P0 work), they should be in separate epics so they can be planned independently. Priority collapse with deferrable features is a major issue — the ability to defer work independently is a planning requirement that overrides boundary convenience. **Exception: triaged strategies.** If `triage: below-threshold` or `triage: docs-only`, the single-epic output is correct by design (Step 0 takes precedence over priority-split logic). Do not flag priority collapse on a triaged strategy — all HLRs are bundled intentionally.
 
 ### Criterion 2: DAG Coherence (0-2 points)
 
@@ -55,7 +63,7 @@ Check: Trace the dependency graph. Verify each edge against the DAG construction
 - **1**: One epic is slightly oversized but could be completed in a single sprint, or one boundary edge case (e.g., shared utility code attributed to one team when two teams contribute).
 - **0**: Epics violate the component/team boundary rule (work for different teams bundled into one epic), or an epic is clearly oversized (multiple sprints of work).
 
-Check: For each epic, verify component and team fields. Look for epics that bundle work across multiple components or teams.
+Check: For each epic, verify component and team fields. Look for epics that bundle work across multiple components or teams. **Also check for scope duplication across sibling epics:** compare the scope sections and acceptance criteria of all epics. If two or more epics independently build the same data structure, UI surface, API endpoint, or component (e.g., both create a benchmark list with status indicators, or both implement log viewing against the same endpoint), that is a major issue — it means the boundary was drawn incorrectly and the epics should be merged or re-split along a different axis. Minor incidental overlap (e.g., both epics mention the same config value) is not duplication.
 
 ### Criterion 4: Type Correctness (0-2 points)
 

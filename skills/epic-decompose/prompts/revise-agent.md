@@ -35,6 +35,8 @@ For each issue in the review's `issues` list, apply the appropriate correction:
 - **Circular dependency**: Break the cycle by removing the least-justified edge.
 
 ### Epic Boundary issues
+- **Triage inconsistency** (`triage: below-threshold` or `docs-only` with `epic_count > 1`): The decomposer applied multi-epic logic after triage should have stopped the flow. Merge all epics back into a single epic `{ID}-E001.md`. Combine the scope, acceptance criteria, and HLR traceability from all existing epics into the single file. Delete the extra epic files and their AI signal files. Update the decomposition summary to reflect `epic_count: 1` and `critical_path_length: 1`.
+- **Scope duplication across sibling epics**: Two or more epics independently build the same data structure, UI surface, or API endpoint. Merge the overlapping epics into one, or re-split along an architectural sub-system boundary (e.g., backend vs. frontend) instead of the current axis. Deduplicate acceptance criteria and scope. Delete any epic files that were merged away and update the decomposition summary.
 - **Multi-component/team epic**: Split into separate epics per the component/team tuple rule. Assign new epic IDs continuing the sequence (e.g., if last epic is E007, new ones are E008, E009).
 - **Oversized epic**: Split by sub-deliverable into smaller epics.
 
