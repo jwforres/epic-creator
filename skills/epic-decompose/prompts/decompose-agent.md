@@ -12,7 +12,12 @@ Architecture context: .context/architecture-context/
 
 Read the strategy file. Run these checks in order; first match terminates the flow:
 
-**Check 1 — Below threshold**: If the strategy is S-sized AND affects a single component AND a single team AND ≥67% of scope would score High AI implementability: produce a single epic file `artifacts/epic-tasks/{ID}-E001.md` (with full frontmatter and body per Step 8) and a decomposition summary. Then stop — no DAG, no multi-step decomposition. Do not proceed to Steps 1-8. In particular, Step 4's priority-split logic does not apply: a below-threshold strategy stays as one epic even if its HLRs span multiple priority levels.
+**Check 1 — Below threshold**: If the strategy is S-sized AND affects a single component AND a single team AND ≥67% of scope would score High AI implementability — check two escape conditions before triggering:
+
+- **Genuine unknowns**: If the strategy contains open questions, conditional ADRs, or pending reviews where the answer would change which epics exist or what they do, below-threshold does not apply. Proceed to Step 1 so Investigation epics can be created.
+- **Multiple distinct work streams**: If the scope spans architecturally distinct sub-systems that warrant separate PR review cycles (e.g., backend API + frontend UI, or code implementation + content authoring + documentation), below-threshold does not apply. Proceed to Step 1 — these splits are architectural, not priority-based, and produce better-scoped PRs.
+
+If neither escape condition applies: produce a single epic file `artifacts/epic-tasks/{ID}-E001.md` (with full frontmatter and body per Step 8) and a decomposition summary. Then stop — no DAG, no multi-step decomposition. Do not proceed to Steps 1-8. In particular, Step 4's priority-split logic does not apply: a below-threshold strategy stays as one epic even if its HLRs span multiple priority levels.
 
 **Check 2 — Documentation only**: If all affected components have "No code changes" or "reference only": produce a single epic file with `implementation_type: docs-authoring`, content outline, and mandatory accuracy validation against architecture context. Write the decomposition summary. Then stop.
 
