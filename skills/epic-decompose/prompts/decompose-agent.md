@@ -240,7 +240,7 @@ Write `artifacts/epic-tasks/{ID}-decomposition.md` in two steps:
 
 1. Write the body content (no frontmatter delimiters) with these sections:
    - **Epic List** (table: ID, title, type, team, priority)
-   - **Dependency DAG** (Mermaid diagram showing edges)
+   - **Dependency DAG** (Mermaid `graph TD` diagram — roots at top, arrows point from dependency to dependent: `E001 --> E003` means "E001 must complete before E003 can start")
    - **DAG Justification** (table: edge, rule, rationale)
    - **HLR Traceability Matrix** (HLR → epic mapping, confirming full coverage)
    - **Health Warnings** (priority inversions, scope traps — if any)
