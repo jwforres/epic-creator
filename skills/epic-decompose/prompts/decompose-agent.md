@@ -104,7 +104,10 @@ Apply these rules to construct edges between epics:
 
 ### Epic Boundary Rules
 1. Different component OR different team → separate epics
-2. Same component + same team + same logical change → single epic. When splitting within a single component, split along architectural sub-system boundaries (e.g., backend API vs. frontend plugin, Go service vs. React UI) rather than along priority or requirement-list axes. Never split such that two epics must build the same data structure, UI surface, or API endpoint independently.
+2. Same component + same team + same logical change → single epic. When splitting within a single component, split along two axes:
+   - **Architectural sub-system boundaries**: backend API vs. frontend plugin, Go service vs. React UI, etc.
+   - **Work-product type boundaries**: code implementation, content authoring (sample notebooks, tutorials, curated examples), and documentation are different kinds of work — they require different skills, different review criteria, and produce different PR review cycles. An epic that mixes code implementation with content authoring should be split even if the same team owns both.
+   These axes take precedence when deciding where to draw epic boundaries within a component. Step 4 may additionally split by priority when features are genuinely deferrable — but the initial boundary structure should come from architecture and work-product type, not from walking down the HLR list. Never split such that two epics must build the same data structure, UI surface, or API endpoint independently.
 
 ### Investigation Edges
 3. Investigation determines scope/existence of downstream work → blocking edge to all affected Implementations. Every downstream epic gated by an Investigation is a true gate (`remove` if the epic may not exist, `rewrite` if scope/approach changes, `add_remediation` if the investigation may reveal a problem requiring additional work) — record this in Step 8b when writing frontmatter. Bounded outcomes (≤3): conditional branches. Unbounded: phased decomposition.
